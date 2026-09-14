@@ -1,17 +1,21 @@
 <?php
 
-use App\Http\Controllers\MovieController;
-
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\MovieController;
 
 Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/movies/filter', [MovieController::class, 'filter'])->name('movies.filter');
+Route::get('/whoami', function () {
+    return 'Ivann Rei M. Delantar | Block 4C | ITRACKB4 Laravel 12';
+});
 
-Route::get('/movies/filter/{genre?}', [MovieController::class, 'filter'])->name('movies.filter');
+Route::get('/movies/featured', [MovieController::class, 'featured'])
+    ->name('movies.featured');
 
-Route::get('/movies', [MovieController::class, 'index'])->name('movies.index');
+Route::get('/movies/filter/{genre?}', [MovieController::class, 'filter'])
+    ->name('movies.filter');
 
-Route::get('/movies/{id?}', [MovieController::class, 'show'])->name('movies.show');
+Route::resource('movies', MovieController::class)
+    ->only(['index', 'show']);

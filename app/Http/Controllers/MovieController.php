@@ -6,12 +6,34 @@ use Illuminate\Http\Request;
 
 class MovieController extends Controller
 {
+    /**
+     * Display a listing of the resource.
+     */
     public function index()
     {
         return view('movies.index', ['movies' => $this->movies()]);
     }
 
-    public function show($id)
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        //
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        //
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(string $id)
     {
         $movies = $this->movies();
 
@@ -22,25 +44,55 @@ class MovieController extends Controller
         return view('movies.show', ['movie' => $movies[$id]]);
     }
 
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(string $id)
+    {
+        //
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, string $id)
+    {
+        //
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(string $id)
+    {
+        //
+    }
+
+    public function featured()
+    {
+        $movies = $this->movies();
+        $movie = $movies[1];
+
+        return view('movies.featured', ['movie' => $movie]);
+    }
+
     public function filter($genre = null)
     {
         $movies = $this->movies();
 
         if ($genre === null) {
-            return view('movies.filter', [
-                'movies' => $movies,
-                'genre' => null
-            ]);
+            return view('movies.filter', ['movies' => $movies, 'genre' => null]);
         }
 
-        $filteredMovies = array_filter($movies, function ($movie) use ($genre) {
-            return strtolower($movie['genre']) === strtolower($genre);
-        });
+        $filteredMovies = [];
 
-        return view('movies.filter', [
-            'movies' => $filteredMovies,
-            'genre' => $genre
-        ]);
+        foreach ($movies as $movie) {
+            if (strcasecmp($movie['genre'], $genre) === 0) {
+                $filteredMovies[] = $movie;
+            }
+        }
+
+        return view('movies.filter', ['movies' => $filteredMovies, 'genre' => $genre]);
     }
 
     private function movies()
