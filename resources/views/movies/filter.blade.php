@@ -10,6 +10,8 @@
         <h4 class="mt-4">Genre: {{ $genre }}</h4>
     @endif
 
+    <a href="{{ route('movies.filter', ['genre' => 'Action']) }}" class="btn btn-primary mb-3">View Action</a>
+
     <table class="table table-striped mt-4" border="1" cellpadding="8">
         <thead>
             <tr>

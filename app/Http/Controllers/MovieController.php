@@ -6,33 +6,57 @@ use Illuminate\Http\Request;
 
 class MovieController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+
+    public function index(Request $request)
     {
-        return view('movies.index', ['movies' => $this->movies()]);
+        $allMovies = $this->movies();
+        $search = trim((string) $request->query('search', ''));
+        $genre = $request->query('genre', 'all');
+        $director = $request->query('director', 'all');
+
+        $movies = $allMovies;
+
+        if ($search !== '') {
+            $movies = array_values(array_filter($movies, function ($movie) use ($search) {
+                return stripos($movie['title'], $search) !== false
+                    || stripos($movie['director'], $search) !== false
+                    || stripos($movie['genre'], $search) !== false;
+            }));
+        }
+
+        if ($genre !== 'all') {
+            $movies = array_values(array_filter($movies, function ($movie) use ($genre) {
+                return strcasecmp($movie['genre'], $genre) === 0;
+            }));
+        }
+
+        if ($director !== 'all') {
+            $movies = array_values(array_filter($movies, function ($movie) use ($director) {
+                return strcasecmp($movie['director'], $director) === 0;
+            }));
+        }
+
+        $genres = collect($allMovies)->pluck('genre')->unique()->sort()->values()->all();
+        $directors = collect($allMovies)->pluck('director')->unique()->sort()->values()->all();
+
+        return view('movies.index', [
+            'movies' => $movies,
+            'search' => $search,
+            'genre' => $genre,
+            'director' => $director,
+            'genres' => $genres,
+            'directors' => $directors,
+        ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        //
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id)
     {
         $movies = $this->movies();
@@ -44,28 +68,16 @@ class MovieController extends Controller
         return view('movies.show', ['movie' => $movies[$id]]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(string $id)
     {
-        //
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, string $id)
     {
-        //
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(string $id)
     {
-        //
     }
 
     public function featured()
@@ -74,25 +86,6 @@ class MovieController extends Controller
         $movie = $movies[1];
 
         return view('movies.featured', ['movie' => $movie]);
-    }
-
-    public function filter($genre = null)
-    {
-        $movies = $this->movies();
-
-        if ($genre === null) {
-            return view('movies.filter', ['movies' => $movies, 'genre' => null]);
-        }
-
-        $filteredMovies = [];
-
-        foreach ($movies as $movie) {
-            if (strcasecmp($movie['genre'], $genre) === 0) {
-                $filteredMovies[] = $movie;
-            }
-        }
-
-        return view('movies.filter', ['movies' => $filteredMovies, 'genre' => $genre]);
     }
 
     private function movies()
