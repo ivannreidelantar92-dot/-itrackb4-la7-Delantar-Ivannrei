@@ -9,7 +9,7 @@ class MovieController extends Controller
 
     public function index(Request $request)
     {
-        $allMovies = $this->movies();
+        $allMovies = $this->readMovies();
         $search = trim((string) $request->query('search', ''));
         $genre = $request->query('genre', 'all');
         $director = $request->query('director', 'all');
@@ -51,21 +51,44 @@ class MovieController extends Controller
 
     public function create()
     {
+        return view('movies.create');
     }
 
     public function store(Request $request)
     {
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'director' => ['required', 'string', 'max:255'],
+            'genre' => ['required', 'string', 'in:Action,Animation,Comedy,Drama,Science Fiction'],
+            'rating' => ['required', 'string', 'max:20'],
+        ]);
+
+        $movies = $this->readMovies();
+        $nextId = empty($movies) ? 1 : max(array_column($movies, 'id')) + 1;
+
+        $movies[] = [
+            'id' => $nextId,
+            'title' => $validated['title'],
+            'director' => $validated['director'],
+            'genre' => $validated['genre'],
+            'rating' => $validated['rating'],
+        ];
+
+        $this->writeMovies($movies);
+
+        return redirect()->route('movies.index')->with('success', 'Movie added successfully.');
     }
 
     public function show(string $id)
     {
-        $movies = $this->movies();
+        $movies = $this->readMovies();
+        $movie = collect($movies)->firstWhere('id', (int) $id);
 
-        if (!isset($movies[$id])) {
+        if (!$movie) {
             abort(404);
         }
 
-        return view('movies.show', ['movie' => $movies[$id]]);
+        return view('movies.show', ['movie' => $movie]);
     }
 
     public function edit(string $id)
@@ -82,21 +105,38 @@ class MovieController extends Controller
 
     public function featured()
     {
-        $movies = $this->movies();
-        $movie = $movies[1];
+        $movies = $this->readMovies();
+        $movie = $movies[0] ?? null;
+
+        if (!$movie) {
+            abort(404);
+        }
 
         return view('movies.featured', ['movie' => $movie]);
     }
 
-    private function movies()
+    private function readMovies()
     {
-        return [
-            1 => ['id' => 1, 'title' => 'Interstellar', 'director' => 'Christopher Nolan', 'genre' => 'Science Fiction', 'rating' => '9.0/10'],
-            2 => ['id' => 2, 'title' => 'The Dark Knight', 'director' => 'Christopher Nolan', 'genre' => 'Action', 'rating' => '9.0/10'],
-            3 => ['id' => 3, 'title' => 'Spirited Away', 'director' => 'Hayao Miyazaki', 'genre' => 'Animation', 'rating' => '8.6/10'],
-            4 => ['id' => 4, 'title' => 'The Grand Budapest Hotel', 'director' => 'Wes Anderson', 'genre' => 'Comedy', 'rating' => '8.1/10'],
-            5 => ['id' => 5, 'title' => 'The Shawshank Redemption', 'director' => 'Frank Darabont', 'genre' => 'Drama', 'rating' => '9.3/10'],
-            6 => ['id' => 6, 'title' => 'Inception', 'director' => 'Christopher Nolan', 'genre' => 'Action', 'rating' => '8.8/10'],
-        ];
+        $path = storage_path('movies.json');
+
+        if (!file_exists($path)) {
+            return [];
+        }
+
+        $content = file_get_contents($path);
+
+        if ($content === false || trim($content) === '') {
+            return [];
+        }
+
+        $movies = json_decode($content, true);
+
+        return is_array($movies) ? $movies : [];
+    }
+
+    private function writeMovies(array $movies): void
+    {
+        $path = storage_path('movies.json');
+        file_put_contents($path, json_encode($movies, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
     }
 }

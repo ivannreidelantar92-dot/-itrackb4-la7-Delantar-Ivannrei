@@ -19,4 +19,4 @@ Route::get('/movies/filter/{genre?}', function (?string $genre = null) {
 })->name('movies.filter');
 
 Route::resource('movies', MovieController::class)
-    ->only(['index', 'show']);
+    ->only(['index', 'create', 'store', 'show']);

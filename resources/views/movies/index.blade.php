@@ -4,6 +4,8 @@
 
 @section('content')
     <div class="mt-4 mb-3">
+        <a href="{{ route('movies.create') }}" class="btn btn-primary mb-3">Add Movie</a>
+
         <form method="GET" action="{{ route('movies.index') }}" class="mb-3">
             <input type="text" name="search" class="form-control" placeholder="Search movie..." value="{{ $search }}">
             <input type="hidden" name="genre" value="{{ $genre }}">
